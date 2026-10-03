@@ -1,0 +1,7 @@
+LIBRARY PlaylistPreviewUI.dll
+
+EXPORTS
+    PlaylistPreviewUI_CreatePreviewRoot
+    PlaylistPreviewUI_SetText
+    PlaylistPreviewUI_SetVisuals
+    PlaylistPreviewUI_ReleasePreviewRoot

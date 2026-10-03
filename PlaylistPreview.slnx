@@ -1,0 +1,19 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <!--
+    Phase 1 restructure: the two shipping projects plus the development-only
+    harness.  The original single packaged-app template project is no longer
+    part of the solution; its files are left in the repository root untouched.
+  -->
+  <Folder Name="/src/">
+    <Project Path="src/PreviewHandlerShell/PreviewHandlerShell.vcxproj" Id="3f1a5c10-1d2e-4b3a-9c41-0a1b2c3d4e02" />
+    <Project Path="src/PlaylistPreviewUI/PlaylistPreviewUI.vcxproj" Id="3f1a5c10-1d2e-4b3a-9c41-0a1b2c3d4e01" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/IslandTestHost/IslandTestHost.vcxproj" Id="3f1a5c10-1d2e-4b3a-9c41-0a1b2c3d4e03" />
+  </Folder>
+</Solution>

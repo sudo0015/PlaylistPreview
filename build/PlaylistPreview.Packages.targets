@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Central NuGet import list (the "targets" half) shared by every project in this
+    solution that consumes the Windows App SDK / C++/WinRT.  Import AFTER
+    Microsoft.Cpp.targets.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.Web.WebView2.1.0.3719.77\build\native\Microsoft.Web.WebView2.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.Web.WebView2.1.0.3719.77\build\native\Microsoft.Web.WebView2.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.Windows.AI.MachineLearning.2.1.74\build\native\Microsoft.Windows.AI.MachineLearning.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.Windows.AI.MachineLearning.2.1.74\build\native\Microsoft.Windows.AI.MachineLearning.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.Windows.SDK.BuildTools.MSIX.1.7.251221100\build\Microsoft.Windows.SDK.BuildTools.MSIX.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.Windows.SDK.BuildTools.MSIX.1.7.251221100\build\Microsoft.Windows.SDK.BuildTools.MSIX.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Base.2.0.4\build\native\Microsoft.WindowsAppSDK.Base.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Base.2.0.4\build\native\Microsoft.WindowsAppSDK.Base.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.DWrite.2.1.0\build\Microsoft.WindowsAppSDK.DWrite.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.DWrite.2.1.0\build\Microsoft.WindowsAppSDK.DWrite.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.InteractiveExperiences.2.1.9\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.InteractiveExperiences.2.1.9\build\native\Microsoft.WindowsAppSDK.InteractiveExperiences.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Foundation.2.3.12\build\native\Microsoft.WindowsAppSDK.Foundation.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Foundation.2.3.12\build\native\Microsoft.WindowsAppSDK.Foundation.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.AI.2.5.5\build\native\Microsoft.WindowsAppSDK.AI.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.AI.2.5.5\build\native\Microsoft.WindowsAppSDK.AI.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.ML.2.1.94\build\native\Microsoft.WindowsAppSDK.ML.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.ML.2.1.94\build\native\Microsoft.WindowsAppSDK.ML.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Runtime.2.5.1\build\native\Microsoft.WindowsAppSDK.Runtime.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Runtime.2.5.1\build\native\Microsoft.WindowsAppSDK.Runtime.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Search.2.5.5\build\native\Microsoft.WindowsAppSDK.Search.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Search.2.5.5\build\native\Microsoft.WindowsAppSDK.Search.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Widgets.2.0.5\build\native\Microsoft.WindowsAppSDK.Widgets.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.Widgets.2.0.5\build\native\Microsoft.WindowsAppSDK.Widgets.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.WinUI.2.3.9\build\native\Microsoft.WindowsAppSDK.WinUI.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.WinUI.2.3.9\build\native\Microsoft.WindowsAppSDK.WinUI.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.2.5.1\build\native\Microsoft.WindowsAppSDK.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.WindowsAppSDK.2.5.1\build\native\Microsoft.WindowsAppSDK.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.Windows.CppWinRT.3.0.260818.1\build\native\Microsoft.Windows.CppWinRT.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.Windows.CppWinRT.3.0.260818.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.Windows.SDK.BuildTools.10.0.28000.2705\build\Microsoft.Windows.SDK.BuildTools.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.Windows.SDK.BuildTools.10.0.28000.2705\build\Microsoft.Windows.SDK.BuildTools.targets')" />
+  <Import Project="$(PlaylistPreviewPackagesDir)Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets"
+          Condition="Exists('$(PlaylistPreviewPackagesDir)Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+
+  <!--
+    The Windows App SDK metapackage ships a check that fails the build when its
+    transitive dependencies are missing from packages.config.  We keep every
+    project's packages.config in sync, so the default behaviour is fine.
+  -->
+
+</Project>
