@@ -189,20 +189,51 @@ namespace
         return dark ? ElementTheme::Dark : ElementTheme::Light;
     }
 
+    // Depth comes from painting two layers: the page, and a card one step away
+    // from it (Windows 11 shows elevation with a colour step, not a shadow).
+    //
+    // The host hands us one colour.  In dark mode the card is the lighter layer
+    // (#202020 -> #2C2C2C).  In light mode the card is lighter too -- unless the
+    // page has no headroom left, which is exactly the case Explorer puts us in
+    // with its white COLOR_WINDOW: then the step goes the other way, the page
+    // drops and the card keeps the colour.  Both branches land on the same
+    // #F3F3F3 page / #FFFFFF card pairing our own light palette uses.
+    void SplitPageAndCard(Windows::UI::Color given, bool dark, Windows::UI::Color& page, Windows::UI::Color& card)
+    {
+        constexpr int kLayerStep = 12;
+        const auto shift = [](uint8_t channel, int delta) {
+            const int value = static_cast<int>(channel) + delta;
+            return static_cast<uint8_t>((std::max)(0, (std::min)(255, value)));
+        };
+
+        const int headroom = 255 - (std::max)({ given.R, given.G, given.B });
+        if (dark || (headroom >= kLayerStep))
+        {
+            page = given;
+            card = Rgb(shift(given.R, kLayerStep), shift(given.G, kLayerStep), shift(given.B, kLayerStep));
+            return;
+        }
+
+        page = Rgb(shift(given.R, -kLayerStep), shift(given.G, -kLayerStep), shift(given.B, -kLayerStep));
+        card = given;
+    }
+
     Palette PaletteFor(bool dark, bool hostPalette, uint32_t hostBackground, uint32_t hostText)
     {
         if (hostPalette)
         {
-            const Windows::UI::Color background = FromColorRef(hostBackground);
             const Windows::UI::Color text = FromColorRef(hostText);
-            Palette palette = HostPrefersDark(background, text)
-                ? Palette{ background, background, Rgb(70, 70, 70), text, text, Rgb(96, 205, 255), text,
+            Windows::UI::Color page{};
+            Windows::UI::Color card{};
+            SplitPageAndCard(FromColorRef(hostBackground), dark, page, card);
+
+            return dark
+                ? Palette{ page, card, Rgb(70, 70, 70), text, text, Rgb(96, 205, 255), text,
                            Rgb(86, 156, 214), Rgb(87, 166, 74), Rgb(206, 145, 120), Rgb(181, 206, 168),
                            Rgb(197, 134, 192), Rgb(86, 156, 214) }
-                : Palette{ background, background, Rgb(215, 215, 215), text, text, Rgb(0, 95, 184), text,
+                : Palette{ page, card, Rgb(215, 215, 215), text, text, Rgb(0, 95, 184), text,
                            Rgb(0, 90, 158), Rgb(0, 128, 0), Rgb(163, 21, 21), Rgb(9, 134, 88),
                            Rgb(136, 0, 180), Rgb(0, 102, 204) };
-            return palette;
         }
 
         if (dark)
@@ -230,6 +261,7 @@ namespace
         TextBlock PlaylistLabel{ nullptr };
         TextBlock TextLabel{ nullptr };
         Border Card{ nullptr };
+        Border StripCover{ nullptr };
         ScrollViewer TextScroller{ nullptr };
         ScrollViewer ListScroller{ nullptr };
         TextBlock TextBody{ nullptr };
@@ -667,6 +699,7 @@ namespace
         root.Root.RequestedTheme(RequestedThemeFor(dark));
         root.Root.Background(SolidColorBrush{ palette.Background });
         root.ModeNav.Background(SolidColorBrush{ palette.Background });
+        root.StripCover.Background(SolidColorBrush{ palette.Background });
         root.Card.Background(SolidColorBrush{ palette.Card });
         root.ListSummary.Foreground(SolidColorBrush{ palette.SecondaryText });
 
@@ -675,6 +708,7 @@ namespace
         BuildPlaylistView(root, palette);
         ApplyMode(root, palette);
     }
+
 }
 
 namespace PlaylistPreviewUI
@@ -769,7 +803,23 @@ namespace PlaylistPreviewUI
         nav.VerticalAlignment(VerticalAlignment::Top);
         Grid::SetRow(card, 1);
 
+        // The NavigationView template wraps its content in a SplitView that draws
+        // a 1 px divider (NavigationViewBorderThickness) along the bottom of the
+        // menu strip.  We hand the NavigationView no content -- the card is a
+        // sibling -- so that strip is the only thing left of it.  Its border
+        // cannot be reached from here: a Resources entry is ignored ({ThemeResource}
+        // only consults theme dictionaries) and a theme-dictionary override takes
+        // the control's own theme resources down with it.  Painting over the band
+        // is the one approach that always holds, and since the strip and the page
+        // share a colour it is invisible.
+        Border stripCover;
+        stripCover.Height(2);
+        stripCover.VerticalAlignment(VerticalAlignment::Bottom);
+        stripCover.IsHitTestVisible(false);
+        Grid::SetRow(stripCover, 0);
+
         root.Children().Append(nav);
+        root.Children().Append(stripCover);
         root.Children().Append(card);
 
         state.Root = root;
@@ -779,6 +829,7 @@ namespace PlaylistPreviewUI
         state.PlaylistLabel = playlistLabel;
         state.TextLabel = textLabel;
         state.Card = card;
+        state.StripCover = stripCover;
         state.TextScroller = textScroller;
         state.ListScroller = listScroller;
         state.TextBody = textBody;
