@@ -16,6 +16,8 @@ A Windows Explorer preview handler for playlist files — rendered with WinUI 3 
 - **Graceful fallback** — files with no tracks, or that are not playlists at all,
   drop straight into text view.
 
+![image](screenshot/screenshot.png)
+
 ## Supported formats
 
 - **CUE (*.cue)**
@@ -28,8 +30,7 @@ A Windows Explorer preview handler for playlist files — rendered with WinUI 3 
 
 ## Install
 
-Download the installer for your machine from the
-[Releases page](https://github.com/sudo0015/PlaylistPreview/releases):
+Download the installer for your machine from the [Releases page](https://github.com/sudo0015/PlaylistPreview/releases).
 
 > [!IMPORTANT]
 > The installers are not code-signed yet, so SmartScreen may show its "Windows protected
@@ -43,7 +44,9 @@ your PC" warning — choose **More info → Run anyway**.
 
 ## Language
 
-The preview UI follows the Windows display language. Supported languages:
+The preview UI follows the Windows display language.
+
+Supported languages:
 
 - English
 - Simplified Chinese
