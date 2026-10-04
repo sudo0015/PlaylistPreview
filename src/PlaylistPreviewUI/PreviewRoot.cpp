@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "PreviewRoot.h"
 #include "PlaylistParser.h"
+#include "Strings.h"
 #include "TextHighlighter.h"
 
 #include <algorithm>
@@ -308,11 +309,6 @@ namespace
         return (found == g_roots.end()) ? nullptr : found->second;
     }
 
-    std::wstring FormatCount(size_t value)
-    {
-        return std::to_wstring(value);
-    }
-
     // UI font stack used when the preview host does not hand one down: Segoe UI
     // is the primary face, and the Microsoft YaHei families follow it as the
     // fallback for CJK titles and performers (Segoe UI carries no CJK glyphs).
@@ -399,7 +395,7 @@ namespace
         if (root.Binary)
         {
             Run warning;
-            warning.Text(hstring{ L"This does not look like text. Showing the raw content." });
+            warning.Text(hstring{ GetString(StringId::NotTextWarning) });
             warning.Foreground(SolidColorBrush{ palette.SecondaryText });
             root.TextBody.Inlines().Append(warning);
             root.TextBody.Inlines().Append(LineBreak{});
@@ -456,7 +452,7 @@ namespace
         if (truncated)
         {
             Run note;
-            note.Text(hstring{ L"… (content truncated; showing the first part only)" });
+            note.Text(hstring{ GetString(StringId::TextTruncated) });
             note.Foreground(SolidColorBrush{ palette.SecondaryText });
             root.TextBody.Inlines().Append(note);
         }
@@ -540,7 +536,7 @@ namespace
     std::wstring AlbumMetaText(PlaylistDocument const& document)
     {
         const size_t count = document.Tracks.size();
-        std::wstring meta = FormatCount(count) + ((count == 1) ? L" Track" : L" Tracks");
+        std::wstring meta = FormatTrackCount(count);
         if (!document.Performer.empty())
         {
             meta = document.Performer + L"  ·  " + meta;
@@ -595,7 +591,7 @@ namespace
         details.VerticalAlignment(VerticalAlignment::Center);
 
         const std::wstring titleText =
-            track.Title.empty() ? std::wstring{ L"(Untitled)" } : track.Title;
+            track.Title.empty() ? std::wstring{ GetString(StringId::UntitledTrack) } : track.Title;
 
         TextBlock title;
         title.Text(hstring{ titleText });
@@ -675,7 +671,7 @@ namespace
         if (document.Tracks.empty())
         {
             TextBlock empty;
-            empty.Text(L"No tracks found.");
+            empty.Text(hstring{ GetString(StringId::NoTracksFound) });
             empty.Foreground(SolidColorBrush{ palette.SecondaryText });
             root.ListPanel.Children().Append(empty);
             return;
@@ -694,8 +690,7 @@ namespace
         {
             const size_t remaining = trackCount - count;
             TextBlock more;
-            more.Text(hstring{ L"… " + FormatCount(remaining) +
-                ((remaining == 1) ? L" more track not shown" : L" more tracks not shown") });
+            more.Text(hstring{ FormatMoreTracks(remaining) });
             more.FontSize(12);
             more.Margin(ThicknessHelper::FromLengths(4, 8, 4, 4));
             more.Foreground(SolidColorBrush{ palette.SecondaryText });
@@ -770,14 +765,14 @@ namespace PlaylistPreviewUI
         NavigationViewItem playlistItem;
         playlistItem.Name(kPlaylistItemName);
         TextBlock playlistLabel;
-        playlistLabel.Text(L"Playlist");
+        playlistLabel.Text(hstring{ GetString(StringId::PlaylistLabel) });
         playlistLabel.FontSize(14);
         playlistItem.Content(playlistLabel);
 
         NavigationViewItem textItem;
         textItem.Name(kTextItemName);
         TextBlock textLabel;
-        textLabel.Text(L"Text");
+        textLabel.Text(hstring{ GetString(StringId::TextLabel) });
         textLabel.FontSize(14);
         textItem.Content(textLabel);
 

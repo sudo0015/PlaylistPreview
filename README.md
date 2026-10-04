@@ -1,8 +1,6 @@
 # PlaylistPreview
 
-A Windows Explorer preview handler for playlist files. Select a `.cue` or `.m3u8`
-file in Explorer, press `Alt+P`, and the preview pane shows its contents — rendered
-with WinUI 3 and matching the Windows 11 look and light/dark theme.
+A Windows Explorer preview handler for playlist files — rendered with WinUI 3 and matching the light/dark theme.
 
 ## Features
 
@@ -20,43 +18,38 @@ with WinUI 3 and matching the Windows 11 look and light/dark theme.
 
 ## Supported formats
 
-| Format | Parsed from | Shown per track |
-|---|---|---|
-| CUE (`.cue`) | `TITLE`, `PERFORMER`, `REM GENRE/DATE`, `FILE`, `TRACK`, `INDEX 01` | Index, title, artist, duration |
-| M3U8 (`.m3u8`) | `#EXTM3U`, `#EXTINF`, `#PLAYLIST`, `#EXTALB`, `#EXTART`, `#EXTGRP` | Index, title, duration, path/URL |
-
-CUE track durations are derived from consecutive `INDEX 01` entries. M3U8 entries
-without `#EXTINF` fall back to the file name and a running start time.
+- **CUE (*.cue)**
+- **M3U8 (*.m3u8)**
 
 ## Requirements
 
 - Windows 10 version 1809 (build 17763) or later; Windows 11 recommended.
 - [Windows App Runtime 2.5.1 or later](https://aka.ms/windowsappsdk/2.5/latest/windowsappruntimeinstall-x64.exe).
-  The handler is an in-process COM DLL, so the runtime cannot be bundled with it.
 
 ## Install
 
-Registration is machine-wide and requires administrator rights; the script asks for
-them automatically.
+Download the installer for your machine from the
+[Releases page](https://github.com/sudo0015/PlaylistPreview/releases):
 
-**Install**
-```powershell
-scripts\install.cmd
-```
-
-**Uninstall**
-```powershell
-scripts\uninstall.cmd
-```
-
-Add `-DryRun` to preview what the installer will do, or `-RestartExplorer` to restart
-Explorer after installing. Run `scripts\install.ps1 -?` for all options.
+> [!IMPORTANT]
+> The installers are not code-signed yet, so SmartScreen may show its "Windows protected
+your PC" warning — choose **More info → Run anyway**.
 
 ## Usage
 
 1. Install and let Explorer restart.
 2. Select a `.cue` or `.m3u8` file and press `Alt+P` to open the preview pane.
 3. Use the toolbar to switch between Playlist and Text view.
+
+## Language
+
+The preview UI follows the Windows display language. Supported languages:
+
+- English
+- Simplified Chinese
+
+> [!NOTE]
+> Want more languages? Feel free to [open an issue](https://github.com/sudo0015/PlaylistPreview/issues) and ask.
 
 ## License
 
@@ -66,17 +59,14 @@ Explorer after installing. Run `scripts\install.ps1 -?` for all options.
 
 ### Built with
 
-- **[Windows App SDK](https://github.com/microsoft/WindowsAppSDK) 2.5.1** — WinUI 3 controls,
-  XAML Islands hosting (`DesktopWindowXamlSource`) and the Windows App Runtime.
-- **[C++/WinRT](https://github.com/microsoft/cppwinrt)** — the WinRT projection behind both
-  `PreviewHandlerShell.dll` and `PlaylistPreviewUI.dll`.
+- **[Windows App SDK](https://github.com/microsoft/WindowsAppSDK) 2.5.1** — WinUI 3 controls, XAML Islands hosting (`DesktopWindowXamlSource`) and the Windows App Runtime.
+- **[C++/WinRT](https://github.com/microsoft/cppwinrt)** — the WinRT projection behind both `PreviewHandlerShell.dll` and `PlaylistPreviewUI.dll`.
 - **Windows SDK** — Win32/COM headers, libraries and the XAML compiler.
 - **Windows Shell preview-handler interfaces** — `IPreviewHandler`, `IInitializeWithStream`, `IObjectWithSite` and `IPreviewHandlerVisuals`, hosted in `prevhost.exe`.
 
 ### Inspired by
 
-- Microsoft's **`CppShellExtPreviewHandler`** sample in
-  [Windows-classic-samples](https://github.com/microsoft/Windows-classic-samples) — the preview-handler skeleton this project grew out of.
+- Microsoft's **`CppShellExtPreviewHandler`** sample in [Windows-classic-samples](https://github.com/microsoft/Windows-classic-samples) — the preview-handler skeleton this project grew out of.
 - **[Microsoft PowerToys](https://github.com/microsoft/PowerToys)** (MIT) — the window-embedding recipe from `FormHandlerControl.UpdateWindowBounds`: create the window on the STA thread, switch to `WS_CHILD` before calling `SetParent`, and fall back to `GetClientRect` when the host passes an empty rectangle.
 - **[Windows App SDK samples](https://github.com/microsoft/WindowsAppSDK-Samples)** — XAML Islands and app SDK bootstrap references.
 

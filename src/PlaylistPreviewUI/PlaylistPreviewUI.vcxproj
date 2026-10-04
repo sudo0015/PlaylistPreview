@@ -117,6 +117,7 @@
     <ClInclude Include="PreviewRoot.h" />
     <ClInclude Include="PlaylistModel.h" />
     <ClInclude Include="PlaylistParser.h" />
+    <ClInclude Include="Strings.h" />
     <ClInclude Include="TextHighlighter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +126,7 @@
     </ClCompile>
     <ClCompile Include="PreviewRoot.cpp" />
     <ClCompile Include="PlaylistParser.cpp" />
+    <ClCompile Include="Strings.cpp" />
     <ClCompile Include="TextHighlighter.cpp" />
     <ClCompile Include="Exports.cpp" />
   </ItemGroup>

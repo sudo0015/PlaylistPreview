@@ -52,3 +52,6 @@ tools/
 *.VC.db-shm
 *.VC.db-wal
 *.VC.opendb
+
+installer/dist/
+installer/build-defines.nsh
