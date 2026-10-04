@@ -244,7 +244,8 @@ namespace PlaylistPreview::Shell
         {
             std::lock_guard guard{ m_lock };
 
-            const HANDLE file = ::CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            const HANDLE file = ::CreateFileW(filePath, GENERIC_READ,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
             if (file == INVALID_HANDLE_VALUE)
             {
@@ -286,8 +287,8 @@ namespace PlaylistPreview::Shell
 
             m_displayName = FileNameFromPath(filePath);
             m_loaded = true;
-            DiagLog(L"IInitializeWithFile: mode=0x%08X, %zu bytes, name='%s'",
-                static_cast<unsigned int>(mode), bytes.size(), m_displayName.c_str());
+            DiagLog(L"IInitializeWithFile: mode=0x%08X, %zu bytes, name='%s', path='%s'",
+                static_cast<unsigned int>(mode), bytes.size(), m_displayName.c_str(), filePath);
 
             return LoadFromBytes(std::move(bytes));
         }

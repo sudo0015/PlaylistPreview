@@ -262,11 +262,13 @@ namespace
         TextBlock TextLabel{ nullptr };
         Border Card{ nullptr };
         Border StripCover{ nullptr };
+        Grid AlbumInfo{ nullptr };
+        TextBlock AlbumTitle{ nullptr };
+        TextBlock AlbumMeta{ nullptr };
         ScrollViewer TextScroller{ nullptr };
         ScrollViewer ListScroller{ nullptr };
         TextBlock TextBody{ nullptr };
         StackPanel ListPanel{ nullptr };
-        TextBlock ListSummary{ nullptr };
 
         int32_t Theme{ kTheme_Default };
         bool UseHostColors{ false };
@@ -499,6 +501,70 @@ namespace
         }
     }
 
+    // The top pane lays its menu out left-aligned: the template puts a zero-width
+    // spacer before the items and all the slack into a star column after them.
+    // Giving that spacer the same star width splits the leftover space evenly, so
+    // the items end up centred.  Both widths are literals in the template (no
+    // theme resource involved), so the change survives theme switches.
+    void CentreNavigationViewItems(DependencyObject const& element)
+    {
+        std::vector<DependencyObject> pending{ element };
+        while (!pending.empty())
+        {
+            const DependencyObject current = pending.back();
+            pending.pop_back();
+
+            if (auto grid = current.try_as<Grid>())
+            {
+                if (grid.Name() == L"TopNavGrid")
+                {
+                    auto columns = grid.ColumnDefinitions();
+                    // 1: TopNavLeftPadding (the spacer), 5: the trailing star.
+                    if (columns.Size() > 5)
+                    {
+                        columns.GetAt(1).Width(GridLengthHelper::FromValueAndType(1, GridUnitType::Star));
+                    }
+                    return;
+                }
+            }
+
+            const int32_t childCount = VisualTreeHelper::GetChildrenCount(current);
+            for (int32_t index = 0; index < childCount; ++index)
+            {
+                pending.push_back(VisualTreeHelper::GetChild(current, index));
+            }
+        }
+    }
+
+    // Album strip, line 2: album artist and track count, dot separated.
+    std::wstring AlbumMetaText(PlaylistDocument const& document)
+    {
+        const size_t count = document.Tracks.size();
+        std::wstring meta = FormatCount(count) + ((count == 1) ? L" Track" : L" Tracks");
+        if (!document.Performer.empty())
+        {
+            meta = document.Performer + L"  ·  " + meta;
+        }
+        return meta;
+    }
+
+    // Fills the album strip when a file is loaded.
+    void ApplyAlbumInfo(LiveRoot& root)
+    {
+        const PlaylistDocument& document = root.Document;
+
+        const std::wstring title = !document.Album.empty()
+            ? document.Album
+            : document.Title;
+        root.AlbumTitle.Text(hstring{ title });
+        root.AlbumTitle.Visibility(title.empty() ? Visibility::Collapsed : Visibility::Visible);
+        SetOverflowToolTip(root.AlbumTitle, title);
+
+        const std::wstring meta = AlbumMetaText(document);
+        root.AlbumMeta.Text(hstring{ meta });
+        SetOverflowToolTip(root.AlbumMeta, meta);
+    }
+
     UIElement BuildTrackRow(LiveRoot const& root, PlaylistTrack const& track, size_t index, Palette const& palette)
     {
         Grid row;
@@ -615,38 +681,9 @@ namespace
             return;
         }
 
-        double total = 0.0;
-        bool totalKnown = true;
-        for (auto const& track : document.Tracks)
-        {
-            if (track.DurationSeconds >= 0.0)
-            {
-                total += track.DurationSeconds;
-            }
-            else
-            {
-                totalKnown = false;
-            }
-        }
-
-        std::wstring summary;
-        if (!document.Album.empty())
-        {
-            summary = document.Album + L"  ·  ";
-        }
-        else if (!document.Title.empty())
-        {
-            summary = document.Title + L"  ·  ";
-        }
+        // The card carries only the list: album title, artist and track count all
+        // live in the album strip above it.
         const size_t trackCount = document.Tracks.size();
-        summary += FormatCount(trackCount) + ((trackCount == 1) ? L" Track" : L" Tracks");
-        if (totalKnown && (total > 0.0))
-        {
-            // Same shape as the per-track durations: mm:ss, never hours.
-            summary += L"  ·  Total " + FormatTrackDuration(total);
-        }
-        root.ListSummary.Text(hstring{ summary });
-
         const size_t count = (std::min)(trackCount, kMaxRenderedTracks);
         for (size_t index = 0; index < count; ++index)
         {
@@ -674,7 +711,7 @@ namespace
         // parse results and scroll positions survive a mode change.
         root.ListScroller.Visibility(showPlaylist ? Visibility::Visible : Visibility::Collapsed);
         root.TextScroller.Visibility(showPlaylist ? Visibility::Collapsed : Visibility::Visible);
-        root.ListSummary.Visibility(showPlaylist ? Visibility::Visible : Visibility::Collapsed);
+        root.AlbumInfo.Visibility(showPlaylist ? Visibility::Visible : Visibility::Collapsed);
 
         // The item labels carry their own brush: a NavigationViewItem resolves
         // its foreground from theme resources, which follow the *process*
@@ -701,7 +738,8 @@ namespace
         root.ModeNav.Background(SolidColorBrush{ palette.Background });
         root.StripCover.Background(SolidColorBrush{ palette.Background });
         root.Card.Background(SolidColorBrush{ palette.Card });
-        root.ListSummary.Foreground(SolidColorBrush{ palette.SecondaryText });
+        root.AlbumTitle.Foreground(SolidColorBrush{ palette.PrimaryText });
+        root.AlbumMeta.Foreground(SolidColorBrush{ palette.SecondaryText });
 
         // Runs bake their colour in, so the text view has to be rebuilt.
         BuildTextView(root, palette);
@@ -750,15 +788,33 @@ namespace PlaylistPreviewUI
         nav.MenuItems().Append(playlistItem);
         nav.MenuItems().Append(textItem);
 
+        // Album strip: album title on the first line, album artist and track count
+        // on the second.  It sits on the page (no card), between the menu and the
+        // list card, and only exists in playlist mode.
+        TextBlock albumTitle;
+        albumTitle.FontSize(16);
+        albumTitle.FontWeight(Windows::UI::Text::FontWeights::SemiBold());
+        albumTitle.TextTrimming(TextTrimming::CharacterEllipsis);
+
+        TextBlock albumMeta;
+        albumMeta.FontSize(13);
+        albumMeta.TextTrimming(TextTrimming::CharacterEllipsis);
+        albumMeta.Margin(ThicknessHelper::FromLengths(0, 2, 0, 0));
+
+        StackPanel albumText;
+        albumText.VerticalAlignment(VerticalAlignment::Center);
+        albumText.Children().Append(albumTitle);
+        albumText.Children().Append(albumMeta);
+
+        Grid albumInfo;
+        albumInfo.Children().Append(albumText);
+        albumInfo.Margin(ThicknessHelper::FromLengths(12, 6, 12, 10));
+        albumInfo.Visibility(Visibility::Collapsed);
+
         Border card;
         card.CornerRadius(CornerRadiusHelper::FromUniformRadius(8));
         card.Padding(ThicknessHelper::FromLengths(12, 8, 12, 8));
         card.Margin(ThicknessHelper::FromLengths(12, 0, 12, 12));
-
-        TextBlock listSummary;
-        listSummary.FontSize(12);
-        listSummary.TextWrapping(TextWrapping::Wrap);
-        listSummary.Margin(ThicknessHelper::FromLengths(4, 2, 4, 6));
 
         ScrollViewer textScroller;
         textScroller.HorizontalScrollBarVisibility(ScrollBarVisibility::Auto);
@@ -767,21 +823,16 @@ namespace PlaylistPreviewUI
         textBody.IsTextSelectionEnabled(true);
         textBody.TextWrapping(TextWrapping::NoWrap);
         textScroller.Content(textBody);
-        Grid::SetRow(textScroller, 1);
 
         ScrollViewer listScroller;
         listScroller.HorizontalScrollBarVisibility(ScrollBarVisibility::Disabled);
         listScroller.VerticalScrollBarVisibility(ScrollBarVisibility::Auto);
         StackPanel listPanel;
         listScroller.Content(listPanel);
-        Grid::SetRow(listScroller, 1);
 
         Grid cardLayout;
         cardLayout.RowDefinitions().Append(RowDefinition{});
-        cardLayout.RowDefinitions().Append(RowDefinition{});
-        cardLayout.RowDefinitions().GetAt(0).Height(GridLengthHelper::Auto());
-        cardLayout.RowDefinitions().GetAt(1).Height(GridLengthHelper::FromValueAndType(1, GridUnitType::Star));
-        cardLayout.Children().Append(listSummary);
+        cardLayout.RowDefinitions().GetAt(0).Height(GridLengthHelper::FromValueAndType(1, GridUnitType::Star));
         cardLayout.Children().Append(textScroller);
         cardLayout.Children().Append(listScroller);
         card.Child(cardLayout);
@@ -789,8 +840,10 @@ namespace PlaylistPreviewUI
         Grid root;
         root.RowDefinitions().Append(RowDefinition{});
         root.RowDefinitions().Append(RowDefinition{});
+        root.RowDefinitions().Append(RowDefinition{});
         root.RowDefinitions().GetAt(0).Height(GridLengthHelper::Auto());
-        root.RowDefinitions().GetAt(1).Height(GridLengthHelper::FromValueAndType(1, GridUnitType::Star));
+        root.RowDefinitions().GetAt(1).Height(GridLengthHelper::Auto());
+        root.RowDefinitions().GetAt(2).Height(GridLengthHelper::FromValueAndType(1, GridUnitType::Star));
 
         // The menu is a sibling of the content, not its host.  Nested in the
         // NavigationView (nav.Content(card)) the card still laid out and
@@ -801,7 +854,8 @@ namespace PlaylistPreviewUI
         Grid::SetRow(nav, 0);
         nav.HorizontalAlignment(HorizontalAlignment::Stretch);
         nav.VerticalAlignment(VerticalAlignment::Top);
-        Grid::SetRow(card, 1);
+        Grid::SetRow(albumInfo, 1);
+        Grid::SetRow(card, 2);
 
         // The NavigationView template wraps its content in a SplitView that draws
         // a 1 px divider (NavigationViewBorderThickness) along the bottom of the
@@ -820,6 +874,7 @@ namespace PlaylistPreviewUI
 
         root.Children().Append(nav);
         root.Children().Append(stripCover);
+        root.Children().Append(albumInfo);
         root.Children().Append(card);
 
         state.Root = root;
@@ -830,11 +885,13 @@ namespace PlaylistPreviewUI
         state.TextLabel = textLabel;
         state.Card = card;
         state.StripCover = stripCover;
+        state.AlbumInfo = albumInfo;
+        state.AlbumTitle = albumTitle;
+        state.AlbumMeta = albumMeta;
         state.TextScroller = textScroller;
         state.ListScroller = listScroller;
         state.TextBody = textBody;
         state.ListPanel = listPanel;
-        state.ListSummary = listSummary;
         state.Theme = kTheme_Default;
         state.PreferPlaylist = LoadPreferredPlaylistMode();
         state.SystemDark = SystemPrefersDark();
@@ -889,6 +946,15 @@ namespace PlaylistPreviewUI
 
         nav.SelectedItem(textItem);
 
+        // Loaded fires once the template exists, which is when the pane grid we
+        // need to rebalance is finally in the tree.
+        nav.Loaded([weak](winrt::Windows::Foundation::IInspectable const&, RoutedEventArgs const&) {
+            if (auto self = weak.lock())
+            {
+                CentreNavigationViewItems(self->ModeNav);
+            }
+        });
+
         ApplyPalette(*shared);
 
         return element;
@@ -908,6 +974,8 @@ namespace PlaylistPreviewUI
         root.Text = std::wstring{ winrt::to_hstring(utf8Text) };
         root.Binary = LooksBinary(root.Text);
         root.Document = root.Binary ? PlaylistDocument{} : ParsePlaylist(displayName, root.Text);
+
+        ApplyAlbumInfo(root);
 
         const bool hasPlaylist = (root.Document.Kind != PlaylistKind::Unknown) && !root.Document.Tracks.empty();
         // A file with nothing to list always opens as text; otherwise the mode
